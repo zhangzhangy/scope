@@ -21,8 +21,25 @@ export default class NodeResourceMetric extends React.Component {
     return (
       <g className="node-resource-metric" transform={transform} onClick={this.handleMouseClick}>
         <title>{label}</title>
-        <rect fill={frameFill} stroke={frameStroke} width={width} height={height} />
-        <rect fill={color} width={width} y={height - innerHeight} height={innerHeight} />
+        <rect
+          className="wrapper"
+          fill={frameFill}
+          stroke={frameStroke}
+          strokeWidth="1"
+          vectorEffect="non-scaling-stroke"
+          height={height}
+          width={width}
+        />
+        <rect
+          className="bar"
+          fill={color}
+          stroke={frameStroke}
+          strokeWidth="1"
+          vectorEffect="non-scaling-stroke"
+          y={height - innerHeight}
+          height={innerHeight}
+          width={width}
+        />
       </g>
     );
   }
