@@ -3,11 +3,11 @@ import { createSelector, createStructuredSelector } from 'reselect';
 import { Map as makeMap } from 'immutable';
 import timely from 'timely';
 
-import { initEdgesFromNodes } from '../utils/layouter-utils';
-import { viewportWidthSelector, viewportHeightSelector } from './canvas-viewport';
-import { activeTopologyOptionsSelector } from './topology';
-import { shownNodesSelector } from './node-filters';
-import { doLayout } from '../charts/nodes-layout';
+import { initEdgesFromNodes } from '../../utils/layouter-utils';
+import { viewportWidthSelector, viewportHeightSelector } from './viewport';
+import { activeTopologyOptionsSelector } from '../topology';
+import { shownNodesSelector } from '../node-filters';
+import { doLayout } from '../../charts/nodes-layout';
 
 const log = debug('scope:nodes-chart');
 
