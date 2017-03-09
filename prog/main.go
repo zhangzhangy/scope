@@ -144,12 +144,15 @@ type appFlags struct {
 	memcachedService          string
 	memcachedExpiration       time.Duration
 	memcachedCompressionLevel int
+	emitterURL                string
+	emitterIncludeFullReport  bool
 	userIDHeader              string
 	externalUI                bool
 
 	blockProfileRate int
 
 	awsCreateTables bool
+	awsCreateStream bool
 	consulInf       string
 }
 
@@ -336,6 +339,8 @@ func main() {
 
 	flag.StringVar(&flags.app.collectorURL, "app.collector", "local", "Collector to use (local, dynamodb, or file/directory)")
 	flag.StringVar(&flags.app.s3URL, "app.collector.s3", "local", "S3 URL to use (when collector is dynamodb)")
+	flag.StringVar(&flags.app.emitterURL, "app.emitter.url", "", "Kinesis URL to use (when emitting reports to kinesis)")
+	flag.BoolVar(&flags.app.emitterIncludeFullReport, "app.emitter.include-full-report", false, "Include the full report data when emitting report summaries")
 	flag.StringVar(&flags.app.controlRouterURL, "app.control.router", "local", "Control router to use (local or sqs)")
 	flag.StringVar(&flags.app.pipeRouterURL, "app.pipe.router", "local", "Pipe router to use (local)")
 	flag.StringVar(&flags.app.natsHostname, "app.nats", "", "Hostname for NATS service to use for shortcut reports.  If empty, shortcut reporting will be disabled.")
@@ -350,6 +355,7 @@ func main() {
 	flag.IntVar(&flags.app.blockProfileRate, "app.block.profile.rate", 0, "If more than 0, enable block profiling. The profiler aims to sample an average of one blocking event per rate nanoseconds spent blocked.")
 
 	flag.BoolVar(&flags.app.awsCreateTables, "app.aws.create.tables", false, "Create the tables in DynamoDB")
+	flag.BoolVar(&flags.app.awsCreateStream, "app.aws.create.stream", false, "Create the stream in Kinesis")
 	flag.StringVar(&flags.app.consulInf, "app.consul.inf", "", "The interface who's address I should advertise myself under in consul")
 
 	flag.Parse()

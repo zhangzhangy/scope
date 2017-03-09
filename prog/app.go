@@ -155,6 +155,54 @@ func collectorFactory(userIDer multitenant.UserIDer, collectorURL, s3URL, natsHo
 	return nil, fmt.Errorf("Invalid collector '%s'", collectorURL)
 }
 
+func emitterFactory(collector app.Collector, userIDer multitenant.UserIDer, emitterURL string, createStream, includeFullReport bool) (app.Collector, error) {
+	if emitterURL == "" {
+		return collector, nil
+	}
+
+	parsed, err := url.Parse(emitterURL)
+	if err != nil {
+		return nil, err
+	}
+
+	switch parsed.Scheme {
+	case "kinesis":
+		kinesisConfig, err := awsConfigFromURL(parsed)
+		if err != nil {
+			return nil, err
+		}
+		streamName := strings.TrimPrefix(parsed.Path, "/")
+		var shardCount int64 = 1
+		if shardsStr := parsed.Query().Get("shards"); shardsStr != "" {
+			shardCount, err = strconv.ParseInt(shardsStr, 10, 64)
+			if err != nil {
+				return nil, err
+			}
+		}
+		awsEmitter, err := multitenant.NewAWSEmitter(
+			collector,
+			multitenant.AWSEmitterConfig{
+				UserIDer:          userIDer,
+				KinesisConfig:     kinesisConfig,
+				StreamName:        streamName,
+				ShardCount:        shardCount,
+				IncludeFullReport: includeFullReport,
+			},
+		)
+		if err != nil {
+			return nil, err
+		}
+		if createStream {
+			if err := awsEmitter.CreateStream(); err != nil {
+				return nil, err
+			}
+		}
+		return awsEmitter, nil
+	}
+
+	return nil, fmt.Errorf("Invalid emitter '%s'", emitterURL)
+}
+
 func controlRouterFactory(userIDer multitenant.UserIDer, controlRouterURL string) (app.ControlRouter, error) {
 	if controlRouterURL == "local" {
 		return app.NewLocalControlRouter(), nil
@@ -227,6 +275,12 @@ func appMain(flags appFlags) {
 		flags.window, flags.awsCreateTables)
 	if err != nil {
 		log.Fatalf("Error creating collector: %v", err)
+		return
+	}
+
+	collector, err = emitterFactory(collector, userIDer, flags.emitterURL, flags.awsCreateStream, flags.emitterIncludeFullReport)
+	if err != nil {
+		log.Fatalf("Error creating emitter: %v", err)
 		return
 	}
 
