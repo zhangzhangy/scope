@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/json"
+	"strings"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -143,6 +144,9 @@ func summarizeReport(internalInstanceID string, rep report.Report, buf []byte, i
 	for _, t := range rep.Topologies() {
 		summary[t.Label+"Count"] = len(t.Nodes)
 	}
+	if interval, ok := reportInterval(rep); ok {
+		summary["publishInterval"] = interval
+	}
 
 	if includeFullReport {
 		summary["report"] = json.RawMessage(buf)
@@ -153,4 +157,35 @@ func summarizeReport(internalInstanceID string, rep report.Report, buf []byte, i
 		return nil, err
 	}
 	return encoded.Bytes(), nil
+}
+
+// reportInterval tries to find the custom report interval of this report. If
+// it is malformed, or not set, it returns false.
+func reportInterval(r report.Report) (time.Duration, bool) {
+	var inter string
+	for _, c := range r.Process.Nodes {
+		cmd, ok := c.Latest.Lookup("cmdline")
+		if !ok {
+			continue
+		}
+		if strings.Contains(cmd, "scope-probe") &&
+			strings.Contains(cmd, "probe.publish.interval") {
+			cmds := strings.SplitAfter(cmd, "probe.publish.interval")
+			aft := strings.Split(cmds[1], " ")
+			if aft[0] == "" {
+				inter = aft[1]
+			} else {
+				inter = aft[0][1:]
+			}
+
+		}
+	}
+	if inter == "" {
+		return 0, false
+	}
+	d, err := time.ParseDuration(inter)
+	if err != nil {
+		return 0, false
+	}
+	return d, true
 }
