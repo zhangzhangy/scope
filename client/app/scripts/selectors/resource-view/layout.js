@@ -1,8 +1,11 @@
-import { createSelector } from 'reselect';
+import { createSelector, createStructuredSelector } from 'reselect';
 // import { createMapSelector } from 'reselect-map';
 import { fromJS, Map as makeMap } from 'immutable';
+/* eslint no-unused-vars: 0 */
+/* eslint no-nested-ternary: 0 */
+/* eslint no-sequences: 0 */
 
-import { resourcesLayers } from '../../constants/styles';
+import { layersDefs } from '../../constants/styles';
 import { getNodeColor } from '../../utils/color-utils';
 
 
@@ -11,22 +14,18 @@ const basePseudoId = 'base';
 // TODO: Make this variable
 const getCPUMetric = node => (node.get('metrics') || makeMap()).find(m => m.get('label') === 'CPU');
 
-// TODO: Parse this logic into multiple smarter selectors
-export const layoutNodesSelector = createSelector(
-  [
-    state => state.get('nodesByTopology'),
-  ],
-  (nodesByTopology) => {
-    const result = [];
-    const childrenXOffset = { [basePseudoId]: 0 };
-    let prevTopologyId = null;
-    let y = 0;
+const layerNodesSelectorFactory = (topologyId, parentLayerNodesSelector = () => null) => (
+  createSelector(
+    [
+      state => state.getIn(['nodesByTopology', topologyId], makeMap()),
+      parentLayerNodesSelector,
+    ],
+    (nodes, parentLayerNodes) => {
+      const childrenXOffset = { [basePseudoId]: 0 };
+      const layerDef = layersDefs[topologyId];
+      let positionedNodes = makeMap();
 
-    resourcesLayers.forEach((layerDef, layerIndex) => {
-      y -= layerDef.frameHeight + layerDef.verticalPadding;
-
-      const nodes = nodesByTopology.get(layerDef.topologyId);
-      if (!nodes) return;
+      parentLayerNodes = parentLayerNodes || makeMap({ basePseudoId: makeMap({ x: 0 }) });
 
       nodes.forEach((node) => {
         const metric = getCPUMetric(node);
@@ -43,25 +42,25 @@ export const layoutNodesSelector = createSelector(
         const nodeWidth = layerDef.withCapacity ? totalCapacity : absoluteConsumption;
         const nodeHeight = layerDef.frameHeight;
 
-        const shiftX = nodeWidth + layerDef.horizontalPadding;
         const parents = node.get('parents') || makeMap();
-        const parent = parents.find(p => p.get('topologyId') === prevTopologyId);
+        const parent = parents.find(p => p.get('topologyId') === layerDef.parentTopologyId);
         const parentId = parent ? parent.get('id') : basePseudoId;
 
-        const nodeY = y;
-        const nodeX = childrenXOffset[parentId];
         // NOTE: We don't handle uncontained yet.
-        if (parentId === basePseudoId && layerIndex > 0) return;
+        if (parentId === basePseudoId && topologyId !== 'hosts') return;
+
+        childrenXOffset[parentId] = childrenXOffset[parentId]
+          || parentLayerNodes.getIn([parentId, 'x'], 0);
+        const nodeX = childrenXOffset[parentId];
+        const nodeY = topologyId === 'hosts' ? 0 : (topologyId === 'containers' ? -160 : -265);
 
         // console.log(nodeX, parentId);
         // TODO: Remove.
         if (nodeX === undefined) return;
 
-        childrenXOffset[parentId] += shiftX;
-        childrenXOffset[nodeId] = nodeX;
+        childrenXOffset[parentId] += nodeWidth;
 
-        result.push(makeMap({
-          id: nodeId,
+        positionedNodes = positionedNodes.set(nodeId, node.merge(makeMap({
           color: nodeColor,
           x: nodeX,
           y: nodeY,
@@ -69,14 +68,31 @@ export const layoutNodesSelector = createSelector(
           height: nodeHeight,
           consumption: nodeConsumption,
           withCapacity: layerDef.withCapacity,
-          label: node.get('label'),
           meta: node,
-        }));
+        })));
       });
 
-      prevTopologyId = layerDef.topologyId;
-    });
+      return positionedNodes;
+    }
+  )
+);
 
-    return fromJS(result);
-  }
+const hostsLayerSelector = layerNodesSelectorFactory('hosts');
+const containersLayerSelector = layerNodesSelectorFactory('containers', hostsLayerSelector);
+const processesLayerSelector = layerNodesSelectorFactory('processes', containersLayerSelector);
+
+const layoutNodesByTopologySelector = createStructuredSelector({
+  hosts: hostsLayerSelector,
+  containers: containersLayerSelector,
+  processes: processesLayerSelector,
+});
+
+export const layoutNodesSelector = createSelector(
+  [
+    layoutNodesByTopologySelector
+  ],
+  layoutNodesByTopology => (
+    fromJS(['hosts', 'containers', 'processes'])
+      .flatMap(topId => layoutNodesByTopology[topId].toList())
+  )
 );
