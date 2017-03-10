@@ -23,7 +23,7 @@ const Item = (icons, label, isSelected, onClick) => {
   );
 };
 
-class GridModeSelector extends React.Component {
+class ViewModeSelector extends React.Component {
   render() {
     const { isGraphViewMode, isTableViewMode, isResourceViewMode } = this.props;
 
@@ -32,9 +32,7 @@ class GridModeSelector extends React.Component {
         <div className="grid-mode-selector-wrapper">
           {Item('fa fa-share-alt', 'Graph', isGraphViewMode, this.props.setGraphView)}
           {Item('fa fa-table', 'Table', isTableViewMode, this.props.setTableView)}
-        </div>
-        <div className="grid-mode-selector-wrapper">
-          {Item('fa fa-bar-chart', 'Resource view', isResourceViewMode, this.props.setResourceView)}
+          {Item('fa fa-bar-chart', 'Resources', isResourceViewMode, this.props.setResourceView)}
         </div>
       </div>
     );
@@ -52,4 +50,4 @@ function mapStateToProps(state) {
 export default connect(
   mapStateToProps,
   { setGraphView, setTableView, setResourceView }
-)(GridModeSelector);
+)(ViewModeSelector);
