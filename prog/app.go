@@ -155,7 +155,7 @@ func collectorFactory(userIDer multitenant.UserIDer, collectorURL, s3URL, natsHo
 	return nil, fmt.Errorf("Invalid collector '%s'", collectorURL)
 }
 
-func emitterFactory(collector app.Collector, userIDer multitenant.UserIDer, emitterURL string, createStream, includeFullReport bool) (app.Collector, error) {
+func emitterFactory(collector app.Collector, userIDer multitenant.UserIDer, emitterURL string, createStream bool) (app.Collector, error) {
 	if emitterURL == "" {
 		return collector, nil
 	}
@@ -182,11 +182,10 @@ func emitterFactory(collector app.Collector, userIDer multitenant.UserIDer, emit
 		awsEmitter, err := multitenant.NewAWSEmitter(
 			collector,
 			multitenant.AWSEmitterConfig{
-				UserIDer:          userIDer,
-				KinesisConfig:     kinesisConfig,
-				StreamName:        streamName,
-				ShardCount:        shardCount,
-				IncludeFullReport: includeFullReport,
+				UserIDer:      userIDer,
+				KinesisConfig: kinesisConfig,
+				StreamName:    streamName,
+				ShardCount:    shardCount,
 			},
 		)
 		if err != nil {
@@ -278,7 +277,7 @@ func appMain(flags appFlags) {
 		return
 	}
 
-	collector, err = emitterFactory(collector, userIDer, flags.emitterURL, flags.awsCreateStream, flags.emitterIncludeFullReport)
+	collector, err = emitterFactory(collector, userIDer, flags.emitterURL, flags.awsCreateStream)
 	if err != nil {
 		log.Fatalf("Error creating emitter: %v", err)
 		return

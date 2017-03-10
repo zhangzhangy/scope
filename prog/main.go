@@ -145,7 +145,6 @@ type appFlags struct {
 	memcachedExpiration       time.Duration
 	memcachedCompressionLevel int
 	emitterURL                string
-	emitterIncludeFullReport  bool
 	userIDHeader              string
 	externalUI                bool
 
@@ -340,7 +339,6 @@ func main() {
 	flag.StringVar(&flags.app.collectorURL, "app.collector", "local", "Collector to use (local, dynamodb, or file/directory)")
 	flag.StringVar(&flags.app.s3URL, "app.collector.s3", "local", "S3 URL to use (when collector is dynamodb)")
 	flag.StringVar(&flags.app.emitterURL, "app.emitter.url", "", "Kinesis URL to use (when emitting reports to kinesis)")
-	flag.BoolVar(&flags.app.emitterIncludeFullReport, "app.emitter.include-full-report", false, "Include the full report data when emitting report summaries")
 	flag.StringVar(&flags.app.controlRouterURL, "app.control.router", "local", "Control router to use (local or sqs)")
 	flag.StringVar(&flags.app.pipeRouterURL, "app.pipe.router", "local", "Pipe router to use (local)")
 	flag.StringVar(&flags.app.natsHostname, "app.nats", "", "Hostname for NATS service to use for shortcut reports.  If empty, shortcut reporting will be disabled.")

@@ -26,6 +26,8 @@ const (
 	// The requested resource could not be found. The stream might not be specified
 	// correctly.
 	ErrCodeResourceNotFoundException = "ResourceNotFoundException"
+
+	megabyte = 2 << 19
 )
 
 var (
@@ -65,23 +67,21 @@ type AWSEmitterConfig struct {
 type awsEmitter struct {
 	app.Collector
 
-	userIDer          UserIDer
-	k                 *kinesis.Kinesis
-	streamName        string
-	shardCount        int64
-	includeFullReport bool
+	userIDer   UserIDer
+	k          *kinesis.Kinesis
+	streamName string
+	shardCount int64
 }
 
 // NewAWSCollector the elastic reaper of souls
 // https://github.com/aws/aws-sdk-go/wiki/common-examples
 func NewAWSEmitter(upstream app.Collector, config AWSEmitterConfig) (AWSEmitter, error) {
 	return &awsEmitter{
-		Collector:         upstream,
-		k:                 kinesis.New(session.New(config.KinesisConfig)),
-		userIDer:          config.UserIDer,
-		streamName:        config.StreamName,
-		shardCount:        config.ShardCount,
-		includeFullReport: config.IncludeFullReport,
+		Collector:  upstream,
+		k:          kinesis.New(session.New(config.KinesisConfig)),
+		userIDer:   config.UserIDer,
+		streamName: config.StreamName,
+		shardCount: config.ShardCount,
 	}, nil
 }
 
@@ -111,8 +111,8 @@ func (e *awsEmitter) Add(ctx context.Context, rep report.Report, buf []byte) err
 	if err != nil {
 		return err
 	}
-	rowKey, _ := calculateDynamoKeys(userid, time.Now())
-	summary, err := summarizeReport(userid, rep, buf, e.includeFullReport)
+	rowKey, colKey := calculateDynamoKeys(userid, time.Now())
+	summary, err := summarizeReport(userid, rep, rowKey, colKey)
 	if err != nil {
 		return err
 	}
@@ -136,22 +136,20 @@ func (e *awsEmitter) Add(ctx context.Context, rep report.Report, buf []byte) err
 }
 
 // summarizeReport formats the data to be emitted.
-func summarizeReport(internalInstanceID string, rep report.Report, buf []byte, includeFullReport bool) ([]byte, error) {
+func summarizeReport(internalInstanceID string, rep report.Report, rowKey, colKey sstring) ([]byte, error) {
 	summary := &reportSummary{
 		ID:                 rep.ID,
 		InternalInstanceID: internalInstanceID,
 		Sha256:             base64.URLEncoding.EncodeToString(sha256.New().Sum(buf)),
 		Counts:             map[string]int{},
+		RowKey:             rowKey,
+		ColKey:             colKey,
 	}
 	for _, t := range rep.Topologies() {
 		summary.Counts[t.Label] = len(t.Nodes)
 	}
 	if interval, ok := reportInterval(rep); ok {
 		summary.PublishInterval = interval
-	}
-
-	if includeFullReport {
-		summary.Report = buf
 	}
 
 	encoded := &bytes.Buffer{}
@@ -162,12 +160,13 @@ func summarizeReport(internalInstanceID string, rep report.Report, buf []byte, i
 }
 
 type reportSummary struct {
-	ID                 string          `json:"id"`
-	InternalInstanceID string          `json:"internalInstanceID"`
-	Sha256             string          `json:"sha256"`
-	Counts             map[string]int  `json:"counts"`
-	PublishInterval    time.Duration   `json:"publishInterval,omitempty"`
-	Report             json.RawMessage `json:"report,omitempty"`
+	ID                 string         `json:"id"`
+	InternalInstanceID string         `json:"internalInstanceID"`
+	Sha256             string         `json:"sha256"`
+	Counts             map[string]int `json:"counts"`
+	PublishInterval    time.Duration  `json:"publishInterval,omitempty"`
+	RowKey             string         `json:"rowKey"`
+	ColKey             string         `json:"colKey"`
 }
 
 // reportInterval tries to find the custom report interval of this report. If
