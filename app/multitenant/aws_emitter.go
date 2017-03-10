@@ -3,6 +3,7 @@ package multitenant
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"strings"
 	"time"
@@ -136,20 +137,21 @@ func (e *awsEmitter) Add(ctx context.Context, rep report.Report, buf []byte) err
 
 // summarizeReport formats the data to be emitted.
 func summarizeReport(internalInstanceID string, rep report.Report, buf []byte, includeFullReport bool) ([]byte, error) {
-	summary := map[string]interface{}{
-		"id":                 rep.ID,
-		"internalInstanceID": internalInstanceID,
-		"sha256":             sha256.Sum256(buf),
+	summary := &reportSummary{
+		ID:                 rep.ID,
+		InternalInstanceID: internalInstanceID,
+		Sha256:             base64.URLEncoding.EncodeToString(sha256.New().Sum(buf)),
+		Counts:             map[string]int{},
 	}
 	for _, t := range rep.Topologies() {
-		summary[t.Label+"Count"] = len(t.Nodes)
+		summary.Counts[t.Label] = len(t.Nodes)
 	}
 	if interval, ok := reportInterval(rep); ok {
-		summary["publishInterval"] = interval
+		summary.PublishInterval = interval
 	}
 
 	if includeFullReport {
-		summary["report"] = json.RawMessage(buf)
+		summary.Report = buf
 	}
 
 	encoded := &bytes.Buffer{}
@@ -157,6 +159,15 @@ func summarizeReport(internalInstanceID string, rep report.Report, buf []byte, i
 		return nil, err
 	}
 	return encoded.Bytes(), nil
+}
+
+type reportSummary struct {
+	ID                 string          `json:"id"`
+	InternalInstanceID string          `json:"internalInstanceID"`
+	Sha256             string          `json:"sha256"`
+	Counts             map[string]int  `json:"counts"`
+	PublishInterval    time.Duration   `json:"publishInterval,omitempty"`
+	Report             json.RawMessage `json:"report,omitempty"`
 }
 
 // reportInterval tries to find the custom report interval of this report. If
