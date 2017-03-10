@@ -138,6 +138,7 @@ func (e *awsEmitter) Add(ctx context.Context, rep report.Report, buf []byte) err
 // summarizeReport formats the data to be emitted.
 func summarizeReport(internalInstanceID string, rep report.Report, rowKey, colKey sstring) ([]byte, error) {
 	summary := &reportSummary{
+		Timestamp:          time.Now().UTC(),
 		ID:                 rep.ID,
 		InternalInstanceID: internalInstanceID,
 		Sha256:             base64.URLEncoding.EncodeToString(sha256.New().Sum(buf)),
@@ -160,6 +161,7 @@ func summarizeReport(internalInstanceID string, rep report.Report, rowKey, colKe
 }
 
 type reportSummary struct {
+	Timestamp          time.Time      `json:"timestamp"`
 	ID                 string         `json:"id"`
 	InternalInstanceID string         `json:"internalInstanceID"`
 	Sha256             string         `json:"sha256"`
