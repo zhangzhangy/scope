@@ -22,12 +22,17 @@ export const resourcesDefaultZoomSelector = createSelector(
     }
 
     const xMin = layoutNodes.map(n => n.get('x')).min();
-    const yMin = layersVerticalPositions.toList().min();
+    const yMin = layoutNodes
+      .map(n => layersVerticalPositions.get(n.get('topologyId'))).toList().min();
+    // const yMin = layersVerticalPositions.toList().min();
     const xMax = layoutNodes.map(n => n.get('x') + n.get('width')).max();
-    const yMax = layersVerticalPositions.toList().max() + RESOURCES_LAYER_HEIGHT;
+    const yMax = RESOURCES_LAYER_HEIGHT + layoutNodes
+      .map(n => layersVerticalPositions.get(n.get('topologyId'))).toList().max();
+    console.log(yMin, yMax);
+    // const yMax = layersVerticalPositions.toList().max() + RESOURCES_LAYER_HEIGHT;
 
-    const scaleX = (width / (xMax - xMin));
-    const scaleY = (height / (yMax - yMin));
+    const scaleX = (width / (xMax - xMin)) * 1.0;
+    const scaleY = (height / (yMax - yMin)) * 0.7;
     const maxScale = scaleX * 2000;
     const minScale = scaleX;
 
