@@ -22,13 +22,15 @@ export const resourcesDefaultZoomSelector = createSelector(
     }
 
     const xMin = layoutNodes.map(n => n.get('x')).min();
-    const yMin = layersVerticalPositions.toList().min();
+    const yMin = layersVerticalPositions.min();
     const xMax = layoutNodes.map(n => n.get('x') + n.get('width')).max();
-    const yMax = layersVerticalPositions.toList().max() + RESOURCES_LAYER_HEIGHT;
+    const yMax = layersVerticalPositions.max() + RESOURCES_LAYER_HEIGHT;
+
+    const minNodeWidth = layoutNodes.map(n => n.get('width')).min();
 
     const scaleX = (width / (xMax - xMin)) * 1.0;
     const scaleY = (height / (yMax - yMin)) * 0.7;
-    const maxScale = scaleX * 2000;
+    const maxScale = width / minNodeWidth;
     const minScale = scaleX;
 
     // This translation puts the graph in the center of the viewport, respecting the margins.
