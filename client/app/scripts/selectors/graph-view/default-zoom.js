@@ -2,7 +2,7 @@ import { createSelector } from 'reselect';
 import { Map as makeMap } from 'immutable';
 
 import { NODE_BASE_SIZE } from '../../constants/styles';
-import { canvasMarginsSelector, viewportWidthSelector, viewportHeightSelector } from '../viewport';
+import { canvasMarginsSelector, canvasWidthSelector, canvasHeightSelector } from '../canvas';
 import { graphNodesSelector } from './graph';
 
 
@@ -13,8 +13,8 @@ export const graphDefaultZoomSelector = createSelector(
   [
     graphNodesSelector,
     canvasMarginsSelector,
-    viewportWidthSelector,
-    viewportHeightSelector,
+    canvasWidthSelector,
+    canvasHeightSelector,
   ],
   (graphNodes, canvasMargins, width, height) => {
     if (graphNodes.size === 0) {

@@ -13,7 +13,7 @@ export const DETAILS_PANEL_OFFSET = 8;
 
 export const CANVAS_MARGINS = {
   [GRAPH_VIEW_MODE]: { top: 160, left: 40, right: 40, bottom: 150 },
-  [TABLE_VIEW_MODE]: { top: 160, left: 40, right: 40, bottom: 150 },
+  [TABLE_VIEW_MODE]: { top: 160, left: 40, right: 40, bottom: 30 },
   [RESOURCE_VIEW_MODE]: { top: 200, left: 40, right: 40, bottom: 100 },
 };
 

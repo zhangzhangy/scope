@@ -2,7 +2,7 @@ import { createSelector } from 'reselect';
 import { Map as makeMap } from 'immutable';
 
 import { RESOURCES_LAYER_HEIGHT } from '../../constants/styles';
-import { canvasMarginsSelector, viewportWidthSelector, viewportHeightSelector } from '../viewport';
+import { canvasMarginsSelector, canvasWidthSelector, canvasHeightSelector } from '../canvas';
 import { layersVerticalPositionSelector } from './layers';
 import { layoutNodesSelector } from './layout';
 
@@ -13,8 +13,8 @@ export const resourcesDefaultZoomSelector = createSelector(
     layersVerticalPositionSelector,
     layoutNodesSelector,
     canvasMarginsSelector,
-    viewportWidthSelector,
-    viewportHeightSelector,
+    canvasWidthSelector,
+    canvasHeightSelector,
   ],
   (layersVerticalPositions, layoutNodes, canvasMargins, width, height) => {
     if (layoutNodes.size === 0) {
