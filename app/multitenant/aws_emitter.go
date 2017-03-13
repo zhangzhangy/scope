@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/base64"
-	"encoding/json"
 	"strings"
 	"time"
 
@@ -112,7 +111,7 @@ func (e *awsEmitter) Add(ctx context.Context, rep report.Report, buf []byte) err
 		return err
 	}
 	rowKey, colKey := calculateDynamoKeys(userid, time.Now())
-	summary, err := summarizeReport(userid, rep, rowKey, colKey)
+	summary, err := summarizeReport(userid, rep, buf, rowKey, colKey)
 	if err != nil {
 		return err
 	}
@@ -136,7 +135,7 @@ func (e *awsEmitter) Add(ctx context.Context, rep report.Report, buf []byte) err
 }
 
 // summarizeReport formats the data to be emitted.
-func summarizeReport(internalInstanceID string, rep report.Report, rowKey, colKey sstring) ([]byte, error) {
+func summarizeReport(internalInstanceID string, rep report.Report, buf []byte, rowKey, colKey string) ([]byte, error) {
 	summary := &reportSummary{
 		Timestamp:          time.Now().UTC(),
 		ID:                 rep.ID,
