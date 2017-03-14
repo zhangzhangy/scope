@@ -4,6 +4,7 @@ import { fromJS, Map as makeMap } from 'immutable';
 import { layersVerticalPositionSelector } from './layers';
 import { layersDefs, RESOURCES_LAYER_HEIGHT } from '../../constants/styles';
 import { getNodeColor } from '../../utils/color-utils';
+import { getMetricValue } from '../../utils/metric-utils';
 /* eslint no-unused-vars: 0 */
 /* eslint no-nested-ternary: 0 */
 /* eslint no-sequences: 0 */
@@ -43,6 +44,7 @@ export const layerNodesSelectorFactory =
           / (topologyId === 'processes' ? 4 : 1);
         const relativeConsumption = absoluteConsumption / totalCapacity;
         const nodeConsumption = layerDef.withCapacity ? relativeConsumption : 1;
+        const { formattedValue } = getMetricValue(metric);
 
         const nodeWidth = layerDef.withCapacity ? totalCapacity : absoluteConsumption;
 
@@ -73,7 +75,7 @@ export const layerNodesSelectorFactory =
           height: RESOURCES_LAYER_HEIGHT,
           consumption: nodeConsumption,
           withCapacity: layerDef.withCapacity,
-          info: `CPU usage: ${absoluteConsumption}%`,
+          info: `Resource usage: ${formattedValue}`,
           meta: node,
         })));
       });
