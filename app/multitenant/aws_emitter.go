@@ -140,7 +140,7 @@ func summarizeReport(internalInstanceID string, rep report.Report, buf []byte, r
 		Timestamp:          time.Now().UTC(),
 		ID:                 rep.ID,
 		InternalInstanceID: internalInstanceID,
-		Sha256:             base64.URLEncoding.EncodeToString(sha256.New().Sum(buf)),
+		Hash:               "sha256:" + base64.URLEncoding.EncodeToString(sha256.New().Sum(buf)),
 		Counts:             map[string]int{},
 		RowKey:             rowKey,
 		ColKey:             colKey,
@@ -163,7 +163,7 @@ type reportSummary struct {
 	Timestamp          time.Time      `json:"timestamp"`
 	ID                 string         `json:"id"`
 	InternalInstanceID string         `json:"internalInstanceID"`
-	Sha256             string         `json:"sha256"`
+	Hash               string         `json:"hash"`
 	Counts             map[string]int `json:"counts"`
 	PublishInterval    time.Duration  `json:"publishInterval,omitempty"`
 	RowKey             string         `json:"rowKey"`
