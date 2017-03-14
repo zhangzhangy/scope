@@ -184,8 +184,8 @@ export function getTopologies(options, dispatch) {
         getTopologies(options, dispatch);
       }, TOPOLOGY_INTERVAL);
     },
-    error: (err) => {
-      log(`Error in topology request: ${err.responseText}`);
+    error: (request, text, err) => {
+      log(`Error in topology request: ${text}: ${err.message}`);
       dispatch(receiveError(url));
       topologyTimer = setTimeout(() => {
         getTopologies(options, dispatch);
@@ -353,7 +353,8 @@ export function getPipeStatus(pipeId, dispatch) {
   });
 }
 
-export function stopTopologyPolling() {
+export function stopPolling() {
+  clearTimeout(apiDetailsTimer);
   clearTimeout(topologyTimer);
   topologyTimer = 0;
 }

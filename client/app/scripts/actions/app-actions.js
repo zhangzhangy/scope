@@ -17,7 +17,7 @@ import {
   getNodeDetails,
   getTopologies,
   deletePipe,
-  stopTopologyPolling,
+  stopPolling,
   teardownWebsockets,
 } from '../utils/web-api-utils';
 import { getCurrentTopologyUrl } from '../utils/topology-utils';
@@ -734,6 +734,6 @@ export function changeInstance() {
 }
 
 export function shutdown() {
-  stopTopologyPolling();
+  stopPolling();
   teardownWebsockets();
 }
