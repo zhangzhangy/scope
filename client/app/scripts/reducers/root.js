@@ -734,6 +734,8 @@ export function rootReducer(state = initialState, action) {
 
     case ActionTypes.CHANGE_INSTANCE: {
       state = closeAllNodeDetails(state);
+      state = state.set('topologiesLoaded', false).set('topologyOptions', makeOrderedMap());
+      state = state.set('zoomCache', makeMap());
       return state;
     }
 

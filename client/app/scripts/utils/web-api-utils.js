@@ -200,7 +200,7 @@ export function getNodesDelta(topologyUrl, options, dispatch, forceReload) {
   // Check for truthy options and that options have changed.
   const isNewOptions = currentOptions && currentOptions !== optionsQuery;
   const isNewUrl = topologyUrl && (topologyUrl !== currentUrl || isNewOptions);
-  if (forceReload || isNewUrl) {
+  if ((forceReload || isNewUrl) && topologyUrl) {
     createWebsocket(topologyUrl, optionsQuery, dispatch);
     currentUrl = topologyUrl;
     currentOptions = optionsQuery;

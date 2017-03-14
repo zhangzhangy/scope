@@ -13,7 +13,7 @@ import Topologies from './topologies';
 import TopologyOptions from './topology-options';
 import { getApiDetails, getTopologies } from '../utils/web-api-utils';
 import { focusSearch, pinNextMetric, hitBackspace, hitEnter, hitEsc, unpinMetric,
-  selectMetric, toggleHelp, toggleGridMode, shutdown } from '../actions/app-actions';
+  selectMetric, toggleHelp, toggleGridMode, shutdown, changeInstance } from '../actions/app-actions';
 import Details from './details';
 import Nodes from './nodes';
 import GridModeSelector from './grid-mode-selector';
@@ -40,12 +40,17 @@ class App extends React.Component {
   componentDidMount() {
     window.addEventListener('keypress', this.onKeyPress);
     window.addEventListener('keyup', this.onKeyUp);
-
     getRouter(this.props.dispatch, this.props.urlState).start({hashbang: true});
     if (!this.props.routeSet) {
       // dont request topologies when already done via router
       getTopologies(this.props.activeTopologyOptions, this.props.dispatch);
     }
+
+    if (process.env.WEAVE_CLOUD) {
+      // This will re-initialize polling and clean up state keys
+      this.props.dispatch(changeInstance());
+    }
+
     getApiDetails(this.props.dispatch);
   }
 
