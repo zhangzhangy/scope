@@ -718,18 +718,20 @@ export function toggleTroubleshootingMenu(ev) {
   };
 }
 
-export function changeInstance() {
+export function changeInstance(orgId) {
   return (dispatch, getState) => {
-    dispatch({ type: ActionTypes.CHANGE_INSTANCE });
-    updateRoute(getState);
     const state = getState();
-    getTopologies(activeTopologyOptionsSelector(state), dispatch);
-    getNodesDelta(
-      getCurrentTopologyUrl(state),
-      activeTopologyOptionsSelector(state),
-      dispatch,
-      true // forces websocket teardown and reconnect to new instance
-    );
+    if (orgId !== state.get('instance')) {
+      dispatch({ type: ActionTypes.CHANGE_INSTANCE, orgId });
+      updateRoute(getState);
+      getTopologies(activeTopologyOptionsSelector(state), dispatch);
+      getNodesDelta(
+        getCurrentTopologyUrl(state),
+        activeTopologyOptionsSelector(state),
+        dispatch,
+        true // forces websocket teardown and reconnect to new instance
+      );
+    }
   };
 }
 

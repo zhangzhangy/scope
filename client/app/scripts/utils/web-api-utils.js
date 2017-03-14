@@ -185,11 +185,13 @@ export function getTopologies(options, dispatch) {
       }, TOPOLOGY_INTERVAL);
     },
     error: (request, text, err) => {
-      log(`Error in topology request: ${text}: ${err.message}`);
-      dispatch(receiveError(url));
-      topologyTimer = setTimeout(() => {
-        getTopologies(options, dispatch);
-      }, TOPOLOGY_INTERVAL);
+      log(`Error in topology request: ${text}: ${err && err.message}`);
+      if (!process.env.WEAVE_CLOUD && request.status <= 400) {
+        // Only try polling again if running as in stand-alone mode.
+        topologyTimer = setTimeout(() => {
+          getTopologies(options, dispatch);
+        }, TOPOLOGY_INTERVAL);
+      }
     }
   });
 }

@@ -48,7 +48,7 @@ class App extends React.Component {
 
     if (process.env.WEAVE_CLOUD) {
       // This will re-initialize polling and clean up state keys
-      this.props.dispatch(changeInstance());
+      this.props.dispatch(changeInstance(this.props.instance));
     }
 
     getApiDetails(this.props.dispatch);

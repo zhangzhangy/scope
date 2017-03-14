@@ -50,7 +50,7 @@ class Topologies extends React.Component {
     );
   }
 
-  renderTopology(topology) {
+  renderTopology(topology, index) {
     const isActive = topology === this.props.currentTopology;
     const searchMatchCount = this.props.searchMatchCountByTopology.get(topology.get('id')) || 0;
     const className = classnames('topologies-item-main', {
@@ -61,7 +61,7 @@ class Topologies extends React.Component {
     const title = basicTopologyInfo(topology, searchMatchCount);
 
     return (
-      <div className="topologies-item" key={topologyId}>
+      <div className="topologies-item" key={`${topologyId}-${index}`}>
         <div className={className} title={title} rel={topologyId} onClick={this.onTopologyClick}>
           <div className="topologies-item-label">
             {topology.get('name')}
@@ -79,7 +79,7 @@ class Topologies extends React.Component {
     return (
       <div className="topologies">
         {this.props.currentTopology && this.props.topologies.map(
-          topology => this.renderTopology(topology)
+          (topology, i) => this.renderTopology(topology, i)
         )}
       </div>
     );

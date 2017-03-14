@@ -24,7 +24,7 @@ export function getNodeType(topology, topologies) {
   let name = topology.get('name');
   if (topology.get('parentId')) {
     const parentTopology = findTopologyById(topologies, topology.get('parentId'));
-    name = parentTopology.get('name');
+    name = parentTopology ? parentTopology.get('name') : name;
   }
   return name.toLowerCase();
 }
