@@ -186,12 +186,10 @@ export function getTopologies(options, dispatch) {
     },
     error: (request, text, err) => {
       log(`Error in topology request: ${text}: ${err && err.message}`);
-      if (!process.env.WEAVE_CLOUD && request.status <= 400) {
-        // Only try polling again if running as in stand-alone mode.
-        topologyTimer = setTimeout(() => {
-          getTopologies(options, dispatch);
-        }, TOPOLOGY_INTERVAL);
-      }
+      // Only try polling again if running as in stand-alone mode.
+      topologyTimer = setTimeout(() => {
+        getTopologies(options, dispatch);
+      }, TOPOLOGY_INTERVAL);
     }
   });
 }
@@ -202,7 +200,7 @@ export function getNodesDelta(topologyUrl, options, dispatch, forceReload) {
   // Check for truthy options and that options have changed.
   const isNewOptions = currentOptions && currentOptions !== optionsQuery;
   const isNewUrl = topologyUrl && (topologyUrl !== currentUrl || isNewOptions);
-  if ((forceReload || isNewUrl) && topologyUrl) {
+  if (forceReload || isNewUrl) {
     createWebsocket(topologyUrl, optionsQuery, dispatch);
     currentUrl = topologyUrl;
     currentOptions = optionsQuery;
@@ -371,5 +369,6 @@ export function teardownWebsockets() {
     socket.close();
     socket = null;
     currentOptions = null;
+    currentUrl = null;
   }
 }

@@ -50,6 +50,7 @@ export const initialState = makeMap({
   highlightedNodeIds: makeSet(),
   hostname: '...',
   initialNodesLoaded: false,
+  instance: null,
   mouseOverEdgeId: null,
   mouseOverNodeId: null,
   networkNodes: makeMap(),
@@ -101,7 +102,7 @@ function processTopologies(state, nextTopologies) {
 
   const topologiesWithFullnames = addTopologyFullname(topologiesWithId);
   const immNextTopologies = fromJS(topologiesWithFullnames).sortBy(topologySorter);
-  return state.mergeDeepIn(['topologies'], immNextTopologies);
+  return state.set('topologies', immNextTopologies);
 }
 
 function setTopology(state, topologyId) {
@@ -735,6 +736,7 @@ export function rootReducer(state = initialState, action) {
     case ActionTypes.CHANGE_INSTANCE: {
       state = closeAllNodeDetails(state);
       return state
+        .set('nodes', makeOrderedMap())
         .set('topologies', makeList())
         .set('topologyUrlsById', makeOrderedMap())
         .set('topologiesLoaded', false)
@@ -742,6 +744,7 @@ export function rootReducer(state = initialState, action) {
         .set('currentTopology', null)
         .set('currentTopologyId', null)
         .set('zoomCache', makeMap())
+        .set('nodesLoaded', false)
         .set('instance', action.orgId);
     }
 
