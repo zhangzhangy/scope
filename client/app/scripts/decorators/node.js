@@ -9,22 +9,29 @@ export function nodeColorDecorator(node) {
   return node.set('color', getNodeColor(node.get('rank'), node.get('label'), node.get('pseudo')));
 }
 
-export function nodeResourceBoxDecorator(node) {
-  const metricType = node.get('metricType');
+export function nodeActiveMetricDecorator(node) {
+  const metricType = node.get('activeMetricType');
   const metric = node.get('metrics', makeMap()).find(m => m.get('label') === metricType);
   if (!metric) return node;
 
   const { formattedValue } = getMetricValue(metric);
-  const info = `Resource usage: ${formattedValue}`;
+  const info = `${metricType} - ${formattedValue}`;
+  const absoluteConsumption = metric.get('value');
   const withCapacity = node.get('withCapacity');
-  const totalCapacity = metric.get('max') / 1e5;
-  const absoluteConsumption = metric.get('value') / 1e5;
+  const totalCapacity = withCapacity ? metric.get('max') : absoluteConsumption;
   const relativeConsumption = absoluteConsumption / totalCapacity;
-  const consumption = withCapacity ? relativeConsumption : 1;
-  const width = withCapacity ? totalCapacity : absoluteConsumption;
+
+  return node.set('activeMetric', makeMap({
+    totalCapacity, absoluteConsumption, relativeConsumption, info
+  }));
+}
+
+export function nodeResourceBoxDecorator(node) {
+  const widthCriterion = node.get('withCapacity') ? 'totalCapacity' : 'absoluteConsumption';
+  const width = node.getIn(['activeMetric', widthCriterion]) * 1e-5;
   const height = RESOURCES_LAYER_HEIGHT;
 
-  return node.merge(makeMap({ width, height, consumption, withCapacity, info }));
+  return node.merge(makeMap({ width, height }));
 }
 
 export function nodeParentNodeDecorator(node) {

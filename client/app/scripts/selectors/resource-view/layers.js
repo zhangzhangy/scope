@@ -8,13 +8,16 @@ import {
   nodeColorDecorator,
   nodeParentNodeDecorator,
   nodeResourceBoxDecorator,
+  nodeActiveMetricDecorator,
 } from '../../decorators/node';
 
 
 const RESOURCE_VIEW_MAX_LAYERS = 3;
 
 const nodeWeight = node => (
-  node.get('withCapacity') ? -node.get('consumption') : -node.get('width')
+  node.get('withCapacity') ?
+    -node.getIn(['activeMetric', 'relativeConsumption']) :
+    -node.get('width')
 );
 
 export const layersTopologyIdsSelector = createSelector(
@@ -58,8 +61,9 @@ const decoratedNodesByTopologySelector = createSelector(
       const decoratedTopologyNodes = (topologyNodes || makeMap())
         .map(node => node.set('directParentTopologyId', lastLayerTopologyId))
         .map(node => node.set('topologyId', layerTopologyId))
-        .map(node => node.set('metricType', pinnedMetricType))
+        .map(node => node.set('activeMetricType', pinnedMetricType))
         .map(node => node.set('withCapacity', layerTopologyId === 'hosts'))
+        .map(nodeActiveMetricDecorator)
         .map(nodeResourceBoxDecorator)
         .map(nodeParentNodeDecorator)
         .map(nodeColorDecorator);
@@ -92,15 +96,26 @@ export const positionedNodesByTopologySelector = createSelector(
 
       buckets.forEach((bucket, parentNodeId) => {
         const parentTopologyId = layersTopologyIds.get(index - 1);
-        const sortedBucket = bucket.sortBy(nodeWeight);
-
         let x = result.getIn([parentTopologyId, parentNodeId, 'x'], 0);
 
-        sortedBucket.forEach((node, nodeId) => {
+        bucket.sortBy(nodeWeight).forEach((node, nodeId) => {
           const positionedNode = node.merge(makeMap({ x, y }));
           result = result.setIn([layerTopologyId, nodeId], positionedNode);
           x += node.get('width');
         });
+
+        const offset = result.getIn([parentTopologyId, parentNodeId, 'x'], 0);
+        const overhead = (x - offset) / result.getIn([parentTopologyId, parentNodeId, 'width'], x);
+        if (overhead > 1) {
+          console.log(overhead);
+          bucket.forEach((_, nodeId) => {
+            const node = result.getIn([layerTopologyId, nodeId]);
+            result = result.mergeIn([layerTopologyId, nodeId], makeMap({
+              x: ((node.get('x') - offset) / overhead) + offset,
+              width: node.get('width') / overhead,
+            }));
+          });
+        }
       });
     });
 

@@ -54,11 +54,10 @@ class NodesResourcesLayer extends React.Component {
               color={node.get('color')}
               width={node.get('width')}
               height={node.get('height')}
-              consumption={node.get('consumption')}
               withCapacity={node.get('withCapacity')}
               x={node.get('x')}
               y={node.get('y')}
-              info={node.get('info')}
+              activeMetric={node.get('activeMetric')}
               meta={node.get('meta')}
             />
           ))}
