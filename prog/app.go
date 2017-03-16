@@ -155,51 +155,14 @@ func collectorFactory(userIDer multitenant.UserIDer, collectorURL, s3URL, natsHo
 	return nil, fmt.Errorf("Invalid collector '%s'", collectorURL)
 }
 
-func emitterFactory(collector app.Collector, userIDer multitenant.UserIDer, emitterURL string, createStream bool) (app.Collector, error) {
-	if emitterURL == "" {
-		return collector, nil
-	}
-
-	parsed, err := url.Parse(emitterURL)
-	if err != nil {
-		return nil, err
-	}
-
-	switch parsed.Scheme {
-	case "kinesis":
-		kinesisConfig, err := awsConfigFromURL(parsed)
-		if err != nil {
-			return nil, err
-		}
-		streamName := strings.TrimPrefix(parsed.Path, "/")
-		var shardCount int64 = 1
-		if shardsStr := parsed.Query().Get("shards"); shardsStr != "" {
-			shardCount, err = strconv.ParseInt(shardsStr, 10, 64)
-			if err != nil {
-				return nil, err
-			}
-		}
-		awsEmitter, err := multitenant.NewAWSEmitter(
-			collector,
-			multitenant.AWSEmitterConfig{
-				UserIDer:      userIDer,
-				KinesisConfig: kinesisConfig,
-				StreamName:    streamName,
-				ShardCount:    shardCount,
-			},
-		)
-		if err != nil {
-			return nil, err
-		}
-		if createStream {
-			if err := awsEmitter.CreateStream(); err != nil {
-				return nil, err
-			}
-		}
-		return awsEmitter, nil
-	}
-
-	return nil, fmt.Errorf("Invalid emitter '%s'", emitterURL)
+func emitterFactory(collector app.Collector, userIDer multitenant.UserIDer, defaultInterval time.Duration) (app.Collector, error) {
+	return multitenant.BillingEmitter(
+		collector,
+		multitenant.BillingEmitterConfig{
+			UserIDer:        userIDer,
+			DefaultInterval: defaultInterval,
+		},
+	)
 }
 
 func controlRouterFactory(userIDer multitenant.UserIDer, controlRouterURL string) (app.ControlRouter, error) {
@@ -277,10 +240,12 @@ func appMain(flags appFlags) {
 		return
 	}
 
-	collector, err = emitterFactory(collector, userIDer, flags.emitterURL, flags.awsCreateStream)
-	if err != nil {
-		log.Fatalf("Error creating emitter: %v", err)
-		return
+	if flags.billingEnabled {
+		collector, err = emitterFactory(collector, userIDer, flags.publishInterval)
+		if err != nil {
+			log.Fatalf("Error creating emitter: %v", err)
+			return
+		}
 	}
 
 	controlRouter, err := controlRouterFactory(userIDer, flags.controlRouterURL)
