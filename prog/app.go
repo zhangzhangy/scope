@@ -156,7 +156,7 @@ func collectorFactory(userIDer multitenant.UserIDer, collectorURL, s3URL, natsHo
 }
 
 func emitterFactory(collector app.Collector, userIDer multitenant.UserIDer, defaultInterval time.Duration) (app.Collector, error) {
-	return multitenant.BillingEmitter(
+	return multitenant.NewBillingEmitter(
 		collector,
 		multitenant.BillingEmitterConfig{
 			UserIDer:        userIDer,
@@ -241,7 +241,7 @@ func appMain(flags appFlags) {
 	}
 
 	if flags.billingEnabled {
-		collector, err = emitterFactory(collector, userIDer, flags.publishInterval)
+		collector, err = emitterFactory(collector, userIDer, flags.defaultPublishInterval)
 		if err != nil {
 			log.Fatalf("Error creating emitter: %v", err)
 			return

@@ -1,18 +1,13 @@
 package multitenant
 
 import (
-	"bytes"
 	"crypto/sha256"
 	"encoding/base64"
 	"strings"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/ugorji/go/codec"
 	billing "github.com/weaveworks/scope/billing-client"
 	"golang.org/x/net/context"
 
@@ -57,32 +52,31 @@ type billingEmitter struct {
 }
 
 // NewBillingEmitter is the charging-mechanism
-func NewBillingEmitter(upstream app.Collector, cfg BillingEmitterConfig) (Collector, error) {
+func NewBillingEmitter(upstream app.Collector, cfg BillingEmitterConfig) (app.Collector, error) {
+	billingClient, err := billing.New()
 	return &billingEmitter{
 		Collector:       upstream,
 		userIDer:        cfg.UserIDer,
 		defaultInterval: cfg.DefaultInterval,
-		billing:         billing.New(),
-	}, nil
+		billing:         billingClient,
+	}, err
 }
 
 func (e *billingEmitter) Add(ctx context.Context, rep report.Report, buf []byte) error {
-	userid, err := e.userIDer(ctx)
+	userID, err := e.userIDer(ctx)
 	if err != nil {
 		return err
 	}
-	rowKey, colKey := calculateDynamoKeys(userid, time.Now())
-	summary, err := summarizeReport(userid, rep, buf, rowKey, colKey)
-	if err != nil {
-		return err
-	}
+	rowKey, colKey := calculateDynamoKeys(userID, time.Now())
 
 	containerCount := int64(len(rep.Container.Nodes))
 	interval, ok := reportInterval(rep)
 	if !ok {
 		interval = e.defaultInterval
 	}
-	hash := "sha256:" + base64.URLEncoding.EncodeToString(sha256.New().Sum(buf))
+	hasher := sha256.New()
+	hasher.Write(buf)
+	hash := "sha256:" + base64.URLEncoding.EncodeToString(hasher.Sum(nil))
 	timestamp := time.Now().UTC()
 	amounts := map[billing.AmountType]int64{
 		billing.ContainerSeconds: int64(interval) * containerCount,

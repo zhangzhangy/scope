@@ -152,7 +152,8 @@ type appFlags struct {
 	awsCreateTables bool
 	consulInf       string
 
-	billingEnabled bool
+	billingEnabled         bool
+	defaultPublishInterval time.Duration
 }
 
 type containerLabelFiltersFlag struct {
@@ -355,6 +356,7 @@ func main() {
 	flag.StringVar(&flags.app.consulInf, "app.consul.inf", "", "The interface who's address I should advertise myself under in consul")
 
 	flag.BoolVar(&flags.app.billingEnabled, "app.billing.enabled", false, "enable emitting billing info")
+	flag.DurationVar(&flags.app.defaultPublishInterval, "app.billing.default-publish-interval", 3*time.Second, "default publish interval to assume for reports")
 
 	flag.Parse()
 
