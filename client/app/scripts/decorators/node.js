@@ -5,8 +5,10 @@ import { getMetricValue } from '../utils/metric-utils';
 import { RESOURCES_LAYER_HEIGHT } from '../constants/styles';
 
 
-export function nodeColorDecorator(node) {
-  return node.set('color', getNodeColor(node.get('rank'), node.get('label'), node.get('pseudo')));
+export function nodeResourceViewColorDecorator(node) {
+  // Color lightness is normaly determined from the node label. However, in the resource view
+  // mode, we don't want to vary the lightness so we just always forward the empty string instead.
+  return node.set('color', getNodeColor(node.get('rank'), '', node.get('pseudo')));
 }
 
 export function nodeActiveMetricDecorator(node) {

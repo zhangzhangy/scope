@@ -52,7 +52,11 @@
   &-selected {
     opacity: $btn-opacity-selected;
   }
-  &:hover {
+  &[disabled] {
+    cursor: default;
+    opacity: $btn-opacity-disabled;
+  }
+  &:not([disabled]):hover {
     opacity: $btn-opacity-hover;
   }
 }
@@ -950,7 +954,7 @@
   &-layer .layer-topology-name {
     background-color: rgba(#eee, 0.95);
     border: 1px solid #ccc;
-    color: #aaa;
+    color: $text-tertiary-color;
     font-size: 16px;
     font-weight: bold;
     padding-right: 20px;
@@ -1231,7 +1235,7 @@
     display: inline-block;
     background-color: $background-color;
 
-    &-selected, &:hover {
+    &-selected, &:not([disabled]):hover {
       color: $text-darker-color;
       background-color: $background-darker-color;
     }
@@ -1271,7 +1275,7 @@
     background-color: transparent;
     text-transform: uppercase;
 
-    &-selected, &:hover {
+    &-selected, &:not([disabled]):hover {
       background-color: $background-darker-secondary-color;
     }
 
@@ -1638,13 +1642,13 @@
 
       &-term {
         flex: 1;
-        color: #5b5b88;
+        color: $text-secondary-color;
       }
 
       &-term-label {
         flex: 1;
         b {
-          color: #5b5b88;
+          color: $text-secondary-color;
         }
       }
     }
