@@ -48,7 +48,7 @@ class Edge extends React.Component {
   }
 
   handleMouseEnter(ev) {
-    this.props.enterEdge(ev.currentTarget.id);
+    this.props.enterEdge(ev.currentTarget.id, this.props.bidirectional);
   }
 
   handleMouseLeave(ev) {

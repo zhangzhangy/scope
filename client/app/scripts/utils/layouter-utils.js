@@ -30,3 +30,20 @@ export function initEdgesFromNodes(nodes) {
 
   return edges;
 }
+
+export function markBidirectional(edges) {
+  return edges.map((edge) => {
+    const source = edge.get('source');
+    const target = edge.get('target');
+    if (source === target) {
+      // Skip nodes connected to to themselves
+      return edge;
+    }
+    const reversedEdgeId = constructEdgeId(target, source);
+    if (edges.has(reversedEdgeId)) {
+      edge = edge.set('bidirectional', true);
+    }
+
+    return edge;
+  });
+}

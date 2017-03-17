@@ -407,10 +407,11 @@ export function doSearch(searchQuery) {
   };
 }
 
-export function enterEdge(edgeId) {
+export function enterEdge(edgeId, bidirectional) {
   return {
     type: ActionTypes.ENTER_EDGE,
-    edgeId
+    edgeId,
+    bidirectional
   };
 }
 

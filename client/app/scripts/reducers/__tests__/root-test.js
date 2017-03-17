@@ -540,4 +540,16 @@ describe('RootReducer', () => {
     expect(nextState.get('selectedNodeId')).toBeFalsy();
     expect(nextState.getIn(['nodeDetails', 'n1'])).toBeFalsy();
   });
+  it('highlights bidirectional edges', () => {
+    const action = {
+      type: ActionTypes.ENTER_EDGE,
+      edgeId: 'abc123-def456',
+      bidirectional: true
+    };
+    const nextState = reducer(initialState, action);
+    expect(nextState.get('highlightedEdgeIds').toJS()).toEqual([
+      'abc123-def456',
+      'def456-abc123'
+    ]);
+  });
 });

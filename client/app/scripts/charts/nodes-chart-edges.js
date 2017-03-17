@@ -70,6 +70,7 @@ class NodesChartEdges extends React.Component {
             blurred={edge.get('blurred')}
             scale={edge.get('scale')}
             isAnimated={isAnimated}
+            bidirectional={edge.get('bidirectional')}
           />
         ))}
       </g>
